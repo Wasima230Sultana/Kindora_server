@@ -26,8 +26,30 @@ app.get('/',(req,res)=>{
     res.send('Hello World!')
 })
 
+app.post('/create-event',async(req,res)=>{
+const data = req.body;
+console.log(data)
+const result = await eventsCollection.insertOne(data);
+res.send(result)
+})
 
+app.get('/create-event',async(req,res)=>{
+const result = await eventsCollection.find({})
+    .sort({ createdAt: -1 })
+    .limit(6)
+    .toArray();
+      res.json(result)
+})
+
+app.get('/upcoming-events',async(req,res)=>{
+const result = await eventsCollection.find({})
+    .sort({ createdAt: -1 })
+    .toArray();
+      res.json(result)
+})
 
 app.listen(port,()=>{
     console.log(`Example app listening on port ${port}`)
 })
+
+export default app;
