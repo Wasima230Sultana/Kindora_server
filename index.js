@@ -52,6 +52,12 @@ app.get('/upcoming-events/:id',async(req,res)=>{
     const result = await eventsCollection.findOne({_id: new ObjectId(id)})
     res.send(result)
 })
+
+app.delete('/upcoming-events/:id',async(req,res)=>{
+ const {id} = req.params;
+     const result = await eventsCollection.deleteOne({_id: new ObjectId(id)})
+res.json(result)
+})
 app.listen(port,()=>{
     console.log(`Example app listening on port ${port}`)
 })
