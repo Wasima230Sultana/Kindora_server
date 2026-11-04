@@ -33,26 +33,7 @@ console.log(data)
 const result = await eventsCollection.insertOne(data);
 res.send(result)
 })
-// app.post("/create-event", async (req, res) => {
-//     try {
-//         const eventData = req.body
 
-//         const result = await eventsCollection.insertOne({
-//             ...eventData,
-//             createdAt: new Date(),
-//         })
-
-//         res.status(201).send({
-//             success: true,
-//             message: "Event created successfully",
-//             insertedId: result.insertedId,
-//         })
-//     } catch (error) {
-//         res.status(500).send({
-//             message: "Failed to create event",
-//         })
-//     }
-// })
 
 app.get('/create-event',async(req,res)=>{
 const result = await eventsCollection.find({})
@@ -89,6 +70,7 @@ const result = await eventsCollection.updateOne(
 res.send(result)
 
 })
+
 app.post('/joined-event',async(req,res)=>{
 const data = req.body;
 console.log(data)
@@ -102,6 +84,23 @@ app.get('/joined-event/:email',async(req,res)=>{
   const result = await myJoinedEventsCollection.find({email:email}).toArray();
   res.send(result);
 })
+
+app.get('/manage-event/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    const result = await eventsCollection
+      .find({ creatorEmail: email })
+      .toArray();
+
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: "Failed to fetch managed events",
+    });
+  }
+});
 
 app.listen(port,()=>{
     console.log(`Example app listening on port ${port}`)
