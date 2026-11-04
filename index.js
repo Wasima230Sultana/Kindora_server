@@ -76,7 +76,7 @@ res.send(result)
 })
 
 
-app.get('/create-event',verifyToken, async (req, res) => {
+app.get('/create-event', async (req, res) => {
   const result = await eventsCollection.find({})
     .sort({ date: 1 })
     .limit(7)
@@ -84,12 +84,13 @@ app.get('/create-event',verifyToken, async (req, res) => {
       res.json(result)
 })
 
-app.get('/upcoming-events',verifyToken,async(req,res)=>{
+app.get('/upcoming-events',async(req,res)=>{
 const result = await eventsCollection.find({})
     .sort({ date: 1 })
     .toArray();
       res.json(result)
 })
+
 app.get('/upcoming-events/:id',verifyToken,async(req,res)=>{
   const {id} = req.params;
     const result = await eventsCollection.findOne({_id: new ObjectId(id)})
@@ -102,7 +103,7 @@ app.delete('/upcoming-events/:id',verifyToken,async(req,res)=>{
 res.json(result)
 })
 
-app.patch('/upcoming-events/:id',verifyToken,async(req,res)=>{
+app.patch('/manage-event/:id',verifyToken,async(req,res)=>{
 const {id} = req.params;
 const data = req.body
 const result = await eventsCollection.updateOne(
@@ -112,7 +113,7 @@ res.send(result)
 
 })
 
-app.post('/joined-event',async(req,res)=>{
+app.post('/joined-event',verifyToken,async(req,res)=>{
 const data = req.body;
 console.log(data)
 const result = await myJoinedEventsCollection.insertOne(data);
@@ -122,8 +123,14 @@ res.send(result)
 app.get('/joined-event/:email',verifyToken,async(req,res)=>{
    const {email} = req.params;
   console.log(email)
-  const result = await myJoinedEventsCollection.find({email:email}).toArray();
+  const result = await myJoinedEventsCollection.find({email:email}).sort({ date: 1 }).toArray();
   res.send(result);
+})
+
+app.delete('/joined-event/:id',verifyToken,async(req,res)=>{
+ const {id} = req.params;
+const result = await myJoinedEventsCollection.deleteOne(    {_id : id,})
+res.send(result)
 })
 
 app.get('/manage-event/:email',verifyToken, async (req, res) => {
