@@ -76,12 +76,12 @@ res.send(result)
 })
 
 
-app.get('/create-event', async (req, res) => {
-  const result = await eventsCollection.find({})
+app.get('/upcoming-events', async (req, res) => {
+  const result = await eventsCollection.find()
     .sort({ date: 1 })
-    .limit(7)
+    .limit(6)
     .toArray();
-      res.json(result)
+      res.send(result)
 })
 
 app.get('/upcoming-events',async(req,res)=>{
@@ -91,11 +91,38 @@ const result = await eventsCollection.find({})
       res.json(result)
 })
 
-app.get('/upcoming-events/:id',verifyToken,async(req,res)=>{
-  const {id} = req.params;
-    const result = await eventsCollection.findOne({_id: new ObjectId(id)})
-    res.send(result)
+
+app.get('/upcoming-events/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+
+    // Validate MongoDB ObjectId
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({
+        message: "Invalid event ID",
+      })
+    }
+
+    const result = await eventsCollection.findOne({
+      _id: new ObjectId(id),
+    })
+
+    if (!result) {
+      return res.status(404).send({
+        message: "Event not found",
+      })
+    }
+
+    res.status(200).send(result)
+  } catch (error) {
+    console.error("Error fetching event:", error)
+
+    res.status(500).send({
+      message: "Failed to fetch event",
+    })
+  }
 })
+
 
 app.delete('/upcoming-events/:id',verifyToken,async(req,res)=>{
  const {id} = req.params;
