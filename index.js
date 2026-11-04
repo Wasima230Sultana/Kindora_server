@@ -35,17 +35,17 @@ res.send(result)
 })
 
 
-app.get('/create-event',async(req,res)=>{
-const result = await eventsCollection.find({})
-    .sort({ createdAt: -1 })
-    .limit(6)
+app.get('/create-event', async (req, res) => {
+  const result = await eventsCollection.find({})
+    .sort({ date: 1 })
+    .limit(7)
     .toArray();
       res.json(result)
 })
 
 app.get('/upcoming-events',async(req,res)=>{
 const result = await eventsCollection.find({})
-    .sort({ createdAt: -1 })
+    .sort({ date: 1 })
     .toArray();
       res.json(result)
 })
