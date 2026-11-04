@@ -68,7 +68,7 @@ app.get('/',(req,res)=>{
     res.send('Hello World!')
 })
 
-app.post('/create-event',async(req,res)=>{
+app.post('/create-event',verifyToken,async(req,res)=>{
 const data = req.body;
 console.log(data)
 const result = await eventsCollection.insertOne(data);
@@ -76,7 +76,7 @@ res.send(result)
 })
 
 
-app.get('/create-event', async (req, res) => {
+app.get('/create-event',verifyToken, async (req, res) => {
   const result = await eventsCollection.find({})
     .sort({ date: 1 })
     .limit(7)
@@ -84,53 +84,25 @@ app.get('/create-event', async (req, res) => {
       res.json(result)
 })
 
-app.get('/upcoming-events',async(req,res)=>{
+app.get('/upcoming-events',verifyToken,async(req,res)=>{
 const result = await eventsCollection.find({})
     .sort({ date: 1 })
     .toArray();
       res.json(result)
 })
-// app.get('/upcoming-events/:id',verifyToken,async(req,res)=>{
-//   const {id} = req.params;
-//     const result = await eventsCollection.findOne({_id: new ObjectId(id)})
-//     res.send(result)
-// })
-app.get('/upcoming-events/:id', verifyToken, async (req, res) => {
-  try {
-    const { id } = req.params
-
-    if (!ObjectId.isValid(id)) {
-      return res.status(400).send({ message: "Invalid event ID" })
-    }
-
-    const result = await eventsCollection.findOne({
-      _id: new ObjectId(id)
-    })
-
-    if (!result) {
-      return res.status(404).send({
-        message: "Event not found"
-      })
-    }
-
+app.get('/upcoming-events/:id',verifyToken,async(req,res)=>{
+  const {id} = req.params;
+    const result = await eventsCollection.findOne({_id: new ObjectId(id)})
     res.send(result)
-
-  } catch (error) {
-    console.error("Event details error:", error)
-
-    res.status(500).send({
-      message: "Failed to fetch event details"
-    })
-  }
 })
 
-app.delete('/upcoming-events/:id',async(req,res)=>{
+app.delete('/upcoming-events/:id',verifyToken,async(req,res)=>{
  const {id} = req.params;
      const result = await eventsCollection.deleteOne({_id: new ObjectId(id)})
 res.json(result)
 })
 
-app.patch('/upcoming-events/:id',async(req,res)=>{
+app.patch('/upcoming-events/:id',verifyToken,async(req,res)=>{
 const {id} = req.params;
 const data = req.body
 const result = await eventsCollection.updateOne(
@@ -147,14 +119,14 @@ const result = await myJoinedEventsCollection.insertOne(data);
 res.send(result)
 })
 
-app.get('/joined-event/:email',async(req,res)=>{
+app.get('/joined-event/:email',verifyToken,async(req,res)=>{
    const {email} = req.params;
   console.log(email)
   const result = await myJoinedEventsCollection.find({email:email}).toArray();
   res.send(result);
 })
 
-app.get('/manage-event/:email', async (req, res) => {
+app.get('/manage-event/:email',verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
 
