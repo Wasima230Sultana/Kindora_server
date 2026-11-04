@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
 import { MongoClient, ObjectId } from 'mongodb';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 const app = express()
 const port = process.env.PORT || 8000;
 
@@ -22,6 +23,46 @@ const mongoClient = await connectToMongoDB();
 const db = mongoClient.db('kindora_resources')
 const eventsCollection = db.collection('events')
 const myJoinedEventsCollection = db.collection('joined-event')
+
+
+const verifyToken = async(req,res,next)=>{
+  const authHeader = req.headers.authorization;
+
+  console.log("Authorization header exists:", !!authHeader);
+
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).send({ msg: "Missing Bearer token!" });
+  }
+  const token = authHeader.split(" ")[1];
+
+  console.log("Bearer token exists:", !!token);
+
+  if (!token) {
+    return res.status(401).send({ msg: "Token is missing!" });
+  }
+   const JWKS = createRemoteJWKSet(
+    new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
+  );
+  console.log(JWKS)
+
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
+
+    console.log("JWT verified successfully:", true);
+
+    req.user = payload;
+    next();
+  } catch (error) {
+    // console.error("JWT verification failed:", error.message);
+    console.error("JWT verification failed:");
+console.error("Error name:", error.name);
+console.error("Error code:", error.code);
+console.error("Error message:", error.message);
+
+    return res.status(401).send({ msg: "Invalid or expired token!" });
+  }
+}
+
 
 app.get('/',(req,res)=>{
     res.send('Hello World!')
@@ -49,10 +90,38 @@ const result = await eventsCollection.find({})
     .toArray();
       res.json(result)
 })
-app.get('/upcoming-events/:id',async(req,res)=>{
-  const {id} = req.params;
-    const result = await eventsCollection.findOne({_id: new ObjectId(id)})
+// app.get('/upcoming-events/:id',verifyToken,async(req,res)=>{
+//   const {id} = req.params;
+//     const result = await eventsCollection.findOne({_id: new ObjectId(id)})
+//     res.send(result)
+// })
+app.get('/upcoming-events/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).send({ message: "Invalid event ID" })
+    }
+
+    const result = await eventsCollection.findOne({
+      _id: new ObjectId(id)
+    })
+
+    if (!result) {
+      return res.status(404).send({
+        message: "Event not found"
+      })
+    }
+
     res.send(result)
+
+  } catch (error) {
+    console.error("Event details error:", error)
+
+    res.status(500).send({
+      message: "Failed to fetch event details"
+    })
+  }
 })
 
 app.delete('/upcoming-events/:id',async(req,res)=>{
