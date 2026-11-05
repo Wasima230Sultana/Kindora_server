@@ -76,7 +76,7 @@ res.send(result)
 })
 
 
-app.get('/upcoming-events', async (req, res) => {
+app.get('/create-event', async (req, res) => {
   const result = await eventsCollection.find()
     .sort({ date: 1 })
     .limit(6)
