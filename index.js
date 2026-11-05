@@ -25,6 +25,7 @@ const eventsCollection = db.collection('events')
 const myJoinedEventsCollection = db.collection('joined-event')
 
 
+
 const verifyToken = async(req,res,next)=>{
   const authHeader = req.headers.authorization;
 
@@ -140,12 +141,46 @@ res.send(result)
 
 })
 
-app.post('/joined-event',verifyToken,async(req,res)=>{
-const data = req.body;
-console.log(data)
-const result = await myJoinedEventsCollection.insertOne(data);
-res.send(result)
-})
+// app.post('/joined-event',verifyToken,async(req,res)=>{
+// const data = req.body;
+// console.log(data)
+// const result = await myJoinedEventsCollection.insertOne(data);
+// res.send(result)
+// })
+
+app.post('/joined-event', verifyToken, async (req, res) => {
+  try {
+    const data = req.body;
+
+    if (req.user.email !== data.email) {
+      return res.status(403).send({
+        message: "You cannot join using another user's email."
+      });
+    }
+
+    const result = await myJoinedEventsCollection.insertOne({
+      ...data,
+      joinedAt: new Date()
+    });
+
+    res.status(201).send({
+      message: "Successfully joined the event!",
+      insertedId: result.insertedId
+    });
+
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).send({
+        message: "You have already joined this event!"
+      });
+    }
+
+    console.error(error);
+    res.status(500).send({
+      message: "Failed to join event."
+    });
+  }
+});
 
 app.get('/joined-event/:email',verifyToken,async(req,res)=>{
    const {email} = req.params;
